@@ -7,7 +7,7 @@ from collections import Counter
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = 'gagantalreja429824'
-api_url = 'http://localhost:3000/predict' #'http://senti-mix-api.herokuapp.com/predict'
+api_url = 'http://senti-mix-api.herokuapp.com/predict'
 
 def generateHTML(output):
     inp = output['completeText']['Given']
