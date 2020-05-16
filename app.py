@@ -3,15 +3,15 @@ from flask import request, redirect, url_for, jsonify, render_template
 from flask import redirect
 from werkzeug.utils import secure_filename
 from flask import Flask, flash
+from collections import Counter
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = 'gagantalreja429824'
 api_url = 'http://senti-mix-api.herokuapp.com/predict'
 
 def generateHTML(output):
     inp = output['completeText']['Given']
     trans_inp = output['completeText']['HindiTranslated']
-    translit_inp = output['completeText']['HindiTransliterate']
     senti = output['score']
     # txtblob = output['textblob']
     html = ''
@@ -19,8 +19,7 @@ def generateHTML(output):
         html += '<tr>'
         html += f'<td>{inp[i]}</td>'
         html += f'<td>{trans_inp[i]}</td>'
-        html += f'<td>{translit_inp[i]}</td>'
-        if len(output['profanity'][f'{i}']) > 2:
+        if len(output['profanity'][f'{i}']) >= 1:
             senti[i] = 2
         if senti[i]==0:
             html += f'<td class="neutral"><b>Neutral</b></td>'
@@ -31,6 +30,22 @@ def generateHTML(output):
         html += '</tr>'
     return html
 
+def getProfanityCountInput(output):
+    profanity = output["profanity"]
+    words = list()
+    for _, lis in profanity.items():
+        words.extend(lis)
+    return dict(Counter(words))
+
+def getProfanityCountFile(output):    
+    profanity = output["profanity"]
+    count = dict()
+    idx = 1
+    for _, lis in profanity.items():
+        count[f'Input: #{idx}'] = len(lis)
+        idx+=1
+    return count
+
 @app.route('/', methods = ['GET'])
 @app.route('/input', methods = ['POST'])
 def predictions_text():
@@ -40,10 +55,10 @@ def predictions_text():
         json_inp = json.dumps({'input': [txt]})
         r = requests.post(api_url, data = json_inp, headers = {'Content-Type': 'application/json'})
         d = r.json()
-        d = d['result'] 
-        print(d)
-        return render_template('index.html', html = generateHTML(d))
-    return render_template('index.html', html = None)
+        d = d['result']
+        profCount = getProfanityCountInput(d)
+        return render_template('index.html', html = generateHTML(d), chartDict = profCount)
+    return render_template('index.html', html = None, chartDict = {})
 
 @app.route('/file', methods = ['POST'])
 def predictions_xlsx():
@@ -66,8 +81,8 @@ def predictions_xlsx():
         r = requests.post(api_url, data = json.dumps(json_dict), headers = {'Content-Type': 'application/json'})
         d = r.json()
         d = d['result']
-        print(d)
-        return render_template('index.html', html = generateHTML(d))
+        profCount = getProfanityCountFile(d)
+        return render_template('index.html', html = generateHTML(d), chartDict = profCount)
     
     else:
         flash('Wrong File Format'.upper())
