@@ -7,7 +7,7 @@ from collections import Counter
 
 app = Flask(__name__, static_folder='static')
 app.config['SECRET_KEY'] = 'gagantalreja429824'
-api_url = 'http://senti-mix-api.herokuapp.com/predict'
+api_url = 'http://localhost:3000/predict' #'http://senti-mix-api.herokuapp.com/predict'
 
 def generateHTML(output):
     inp = output['completeText']['Given']
@@ -19,13 +19,18 @@ def generateHTML(output):
         html += '<tr>'
         html += f'<td>{inp[i]}</td>'
         html += f'<td>{trans_inp[i]}</td>'
-        if len(output['profanity'][f'{i}']) >= 1:
+        a = len(output['profanity'][f'{i}']) * 2
+        print(output["good"])
+        b = output['good'][f'{i}']
+        if a>=b:
             senti[i] = 2
-        if senti[i]==0:
+        elif b>a:
+            senti[i] = 1
+        if senti[i] == 0:
             html += f'<td class="neutral"><b>Neutral</b></td>'
-        elif senti[i] == 1:
+        if senti[i] == 1:
             html += f'<td class="positive"><b>Positive</b></td>'
-        else:
+        if senti[i] == 2:
             html += f'<td class="negative"><b>Negative</b></td>'
         html += '</tr>'
     return html
