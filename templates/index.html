@@ -2,13 +2,13 @@
 <html lang="hi">
 
 <head>
-    <link rel="shortcut icon" type="image/png" href="images/g.png">
+    <link rel="shortcut icon" type="image/png" href="https://i.ya-webdesign.com/images/happy-sad-mask-png-6.png">
     <title>Tweet Inspector</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="project site">
     <meta name="author" content="Gagan Talreja">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <!--    <link rel="stylesheet" href="style.css">-->
     <link href='https://fonts.googleapis.com/css?family=Acme' rel='stylesheet'>
@@ -35,27 +35,47 @@
         font-family: 'Raleway';
     }
 
-    /*
-    .text-form {
-        padding-left: 90px;
-        padding-right: 40px;
+    body {
+        color: #506784;
+        background:
+            linear-gradient(rgba(255, 255, 255, 0.6),
+                rgba(255, 255, 255, 0.6)),
+            url("https://raw.githubusercontent.com/plotly/dash-docs/master/images/dash-pattern.png");
+        margin: 0px;
     }
 
-    .file-form {
-        padding-left: 40px;
-        padding-right: 90px;
+    ::-webkit-scrollbar {
+        width: 15px;
     }
-*/
 
+    ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 15px;
+    }
 
-    .text-muted {
+    ::-webkit-scrollbar-thumb {
+        border-radius: 15px;
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    .negative {
         color: red;
+        font-weight: 500;
+    }
+    
+    .positive {
+        color: green;
+        font-weight: 500;
+    }
+    
+    .neutral {
+        color: blue;
+        font-weight: 500;
     }
 
     .table-div {
-        
+
         padding-top: 60px;
-        /*        padding-bottom: 60px;*/
         font-family: 'Raleway';
     }
 
@@ -80,14 +100,14 @@
 <body>
     <div class="container">
         <div class="text-center">
-            <h1 class="main-head">SentiMix</h1>
+            <h1 class="main-head"><span style="color: green">Senti</span><span style="color: red;">Mix</span></h1>
             <h5><strong>A PROGRAM THAT CAN BE USED TO ANALYZE TH SENTIMENT OF A GIVEN TWEET IN CODE-MIXED LANGUAGE (HINGLISH).</strong></h5>
         </div>
         <div class="row">
             <div class="col-sm-6 text-form">
                 <form method="post" action="/input">
                     <div class="form-group">
-                        <label for="text-box">TEXT INPUT</label>
+                        <label for="text-box"><b>TEXT INPUT</b></label>
                         <input type="text" name="text" class="form-control" id="text-box" aria-describedby="label-text" placeholder="Enter Hindi tweet">
                         <small id="emailHelp" class="form-text text-muted"></small>
                     </div>
@@ -97,7 +117,7 @@
             <div class="col-sm-6 file-form">
                 <form method="post" action="/file" enctype="multipart/form-data">
                     <div class="form-group file-input">
-                        <label for="file-input-json">EXCEL FILE INPUT</label>
+                        <label for="file-input-json"><b>EXCEL FILE INPUT</b></label>
                         <input type="file" name="file" class="form-control" id="file-input-xlsx">
                     </div>
                     <button type="submit" class="btn btn-primary frm-btn">GET RESULTS</button>
@@ -105,56 +125,42 @@
             </div>
         </div>
         <div class="table-div">
-            <h1 class="result-head">Prediction Results</h1>
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Tweet</th>
-                        <th scope="col">Test Value</th>
-                        <th scope="col">Predicted Value</th>
-                    </tr>
-                </thead>
-                {% if data == None%}
-                <tbody>
-                    <td colspan="9">
-                        <h3 style="color: red;">No results have been generated yet!</h3>
-                    </td>
-                </tbody>
-                {% else %}
-                <tbody>
-                    {% for k, v in data.items() %}
-                    <tr>
-                        <th scope="row">{{ k }}</th>
-                        <td>{{ v['text'] }}</td>
-                        <td>
-                            {% if v['value'] == '1' %}
-                            <span style="color: darkgreen;"><strong>Positive</strong></span>
-                            {% elif v['value'] == '0' %}
-                            <span style="color: darkblue;"><strong>Neutral</strong></span>
+
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fa fa-table mr-1"></i><b>Prediction Results</b>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                            {% if html == None %}
+                            <tbody>
+                                <td colspan="9" class="text-center">
+                                    <h3 style="color: red;">No results have been generated yet!</h3>
+                                </td>
+                            </tbody>
                             {% else %}
-                            <span style="color: red;"><strong>Negative</strong></span>
+                            <thead>
+                                <tr>
+                                    <th>Input</th>
+                                    <th>Translated Input</th>
+                                    <th>Transliterated Input</th>
+                                    <th>SentiMix Sentiment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ html | safe }}
+                            </tbody>
                             {% endif %}
-                        </td>
-                        <td>
-                            {% if v['pos'] > v['neg'] %}
-                            <span style="color: darkgreen;"><strong>Positive</strong></span>
-                            {% elif v['pos'] == v['neg'] %}
-                            <span style="color: darkblue;"><strong>Neutral</strong></span>
-                            {% else %}
-                            <span style="color: red;"><strong>Negative</strong></span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                {% endif %}
-            </table>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 </body>
 

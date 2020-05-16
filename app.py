@@ -2,13 +2,34 @@ import flask, json, requests, os, pandas as pd
 from flask import request, redirect, url_for, jsonify, render_template
 from flask import redirect
 from werkzeug.utils import secure_filename
-
-
-from flask import Flask, flash, request, redirect, url_for
+from flask import Flask, flash
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'gagantalreja429824'
-api_url = 'http://api-senti-mix.herokuapp.com/sentiment'
+api_url = 'http://senti-mix-api.herokuapp.com/predict'
+
+def generateHTML(output):
+    inp = output['completeText']['Given']
+    trans_inp = output['completeText']['HindiTranslated']
+    translit_inp = output['completeText']['HindiTransliterate']
+    senti = output['score']
+    # txtblob = output['textblob']
+    html = ''
+    for i in range(len(senti)):
+        html += '<tr>'
+        html += f'<td>{inp[i]}</td>'
+        html += f'<td>{trans_inp[i]}</td>'
+        html += f'<td>{translit_inp[i]}</td>'
+        if len(output['profanity'][f'{i}']) > 2:
+            senti[i] = 2
+        if senti[i]==0:
+            html += f'<td class="neutral"><b>Neutral</b></td>'
+        elif senti[i] == 1:
+            html += f'<td class="positive"><b>Positive</b></td>'
+        else:
+            html += f'<td class="negative"><b>Negative</b></td>'
+        html += '</tr>'
+    return html
 
 @app.route('/', methods = ['GET'])
 @app.route('/input', methods = ['POST'])
@@ -16,24 +37,16 @@ def predictions_text():
     if request.method == 'POST':
         txt = request.form['text']
         value = 0
-        json_inp = json.dumps([{'text': txt, 'value': value}])
+        json_inp = json.dumps({'input': [txt]})
         r = requests.post(api_url, data = json_inp, headers = {'Content-Type': 'application/json'})
-        print(r.status_code)
         d = r.json()
         d = d['result'] 
-        send = dict()
-        for i in range(len(d)):
-            print(d)
-            f = d[i]
-            f['text'] = txt
-            f['value'] = value
-            send[i+1] = d[i]  
-        return render_template('index.html', data = send)
-    return render_template('index.html', data = None)
+        print(d)
+        return render_template('index.html', html = generateHTML(d))
+    return render_template('index.html', html = None)
 
 @app.route('/file', methods = ['POST'])
 def predictions_xlsx():
-    print(request.files)
     if 'file' not in request.files:
         print('no file')
         flash('Error'.upper())
@@ -47,30 +60,14 @@ def predictions_xlsx():
         return redirect('/')
     
     if file and '.xlsx' in file.filename:
-        print('OK')
-        #filename = secure_filename(file.filename)
-        #file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         df = pd.read_excel(file)
-        print(df.head())
         txt = df.tweet.tolist()
-        vals = df.value.tolist()
-        json_dict = []
-        print(txt, vals)
-        for i in range(len(txt)):
-            print(txt[i], vals[i])
-            json_dict.append({'text': txt[i], 'value': vals[i]})
+        json_dict = {'input': txt}
         r = requests.post(api_url, data = json.dumps(json_dict), headers = {'Content-Type': 'application/json'})
-        print(r.status_code)
         d = r.json()
         d = d['result']
-        send = dict()
-        for i in range(len(d)):
-            print(d)
-            f = d[i]
-            f['text'] = txt[i]
-            f['value'] = vals[i]
-            send[i+1] = d[i]
-        return render_template('index.html', data = send)
+        print(d)
+        return render_template('index.html', html = generateHTML(d))
     
     else:
         flash('Wrong File Format'.upper())
@@ -78,3 +75,5 @@ def predictions_xlsx():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+# ["rahul gandhi chor hai","Model ka output nhi ara randi ke bache","vipul jabardasti ka hua va baccha hai","ik gaand mein marunga sahi hojayega vipul"]
