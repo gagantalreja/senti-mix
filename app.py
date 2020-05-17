@@ -22,7 +22,7 @@ def generateHTML(output):
         a = len(output['profanity'][f'{i}']) * 2
         print(output["good"])
         b = output['good'][f'{i}']
-        if a>=b:
+        if a>b:
             senti[i] = 2
         elif b>a:
             senti[i] = 1
